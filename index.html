@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Net Take Home Salary Calculator — as on 01.07.2028 (8th CPC)</title>
+<style>
+  :root{
+    --ink:#1b2a41;
+    --paper:#f7f8f6;
+    --line:#c9d2c5;
+    --accent:#0e7a5f;
+    --accent-dark:#0a5c48;
+    --deduct:#a33b2e;
+    --muted:#5b6b7c;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:Georgia,'Times New Roman',serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.5;
+    padding:24px 16px 64px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+  header{
+    border-top:4px solid var(--ink);
+    border-bottom:1px solid var(--line);
+    padding:18px 0 14px;
+    margin-bottom:28px;
+  }
+  .eyebrow{
+    font-family:Verdana,Arial,sans-serif;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:6px;
+  }
+  h1{font-size:clamp(22px,4vw,32px);font-weight:normal;letter-spacing:-.01em}
+  h1 b{font-weight:bold}
+  .sub{color:var(--muted);font-size:14px;margin-top:4px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:22px;
+  }
+  .panel h2{
+    font-family:Verdana,Arial,sans-serif;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:16px;
+    padding-bottom:8px;border-bottom:1px solid var(--line);
+  }
+  label{
+    display:block;
+    font-family:Verdana,Arial,sans-serif;
+    font-size:12px;font-weight:bold;
+    margin:14px 0 6px;
+  }
+  label:first-of-type{margin-top:0}
+  select,input[type=number]{
+    width:100%;
+    padding:10px 12px;
+    font:15px Georgia,serif;
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:#fff;
+  }
+  select:focus,input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px;font-style:italic}
+  .err{font-size:12px;color:var(--deduct);margin-top:4px;font-weight:bold;font-family:Verdana,Arial,sans-serif;display:none}
+
+  button{
+    margin-top:20px;width:100%;
+    padding:13px;
+    font:bold 14px Verdana,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;
+    color:#fff;background:var(--accent);
+    border:none;border-radius:4px;cursor:pointer;
+  }
+  button:hover{background:var(--accent-dark)}
+  button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+  .slip{display:none}
+  .slip.show{display:block}
+  .slip table{width:100%;border-collapse:collapse;font-size:15px}
+  .slip td{padding:9px 4px;border-bottom:1px dotted var(--line)}
+  .slip td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .slip .sec td{
+    font-family:Verdana,Arial,sans-serif;font-size:11px;font-weight:bold;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    border-bottom:1px solid var(--line);padding-top:16px;
+  }
+  .slip .ded td:last-child{color:var(--deduct)}
+  .slip .tot td{border-top:2px solid var(--ink);border-bottom:none;font-weight:bold;font-size:16px;padding-top:12px}
+  .net{
+    margin-top:18px;
+    background:var(--ink);color:#fff;
+    border-radius:6px;padding:18px 20px;
+    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;
+  }
+  .net .lbl{font-family:Verdana,Arial,sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+  .net .amt{font-size:30px;font-weight:bold;font-variant-numeric:tabular-nums}
+  .net .yr{width:100%;font-size:13px;opacity:.8}
+
+  details{margin-top:28px;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+  summary{
+    cursor:pointer;padding:14px 18px;
+    font-family:Verdana,Arial,sans-serif;font-size:12px;font-weight:bold;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  }
+  details .body{padding:0 18px 18px;font-size:14px;color:var(--muted)}
+  details li{margin:6px 0 6px 18px}
+  .empty{color:var(--muted);font-style:italic;font-size:14px}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e7a5f">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Central Government Employees · 8th Pay Commission Projection</div>
+    <h1><b>Net Take Home Salary</b> as on 01.07.2028</h1>
+    <div class="sub">Two increments in current pay level × Fitment Factor · New Tax Regime · DA = 0</div>
+  </header>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Employee Particulars</h2>
+
+      <label for="level">Pay Level</label>
+      <select id="level"></select>
+
+      <label for="basic">Current Basic Pay (₹)</label>
+      <select id="basic"></select>
+      <div class="hint">Cells as per 7th CPC Pay Matrix for the chosen level</div>
+
+      <label for="city">City Category of Posting (HRA)</label>
+      <select id="city">
+        <option value="X">X — HRA 24% of Basic Pay after 8th CPC</option>
+        <option value="Y">Y — HRA 16% of Basic Pay after 8th CPC</option>
+        <option value="Z">Z — HRA 8% of Basic Pay after 8th CPC</option>
+      </select>
+
+      <label for="ff">Fitment Factor (1.83 – 3.83)</label>
+      <input type="number" id="ff" min="1.83" max="3.83" step="0.01" value="2">
+      <div class="err" id="ffErr">Enter a value between 1.83 and 3.83 (up to 2 decimals).</div>
+      <div class="hint">Applied to Basic Pay as on 01.07.2028 and to the base TA rate</div>
+
+      <button id="calc">Calculate Net Take Home</button>
+    </section>
+
+    <section class="panel">
+      <h2>Salary Slip — 01.07.2028</h2>
+      <p class="empty" id="placeholder">Fill in the particulars and press Calculate. The slip will appear here with the full earnings, deductions and tax working.</p>
+
+      <div class="slip" id="slip">
+        <table>
+          <tr class="sec"><td colspan="2">Pay Fixation</td></tr>
+          <tr><td>Basic Pay on 01.07.2028 (7th CPC, +2 increments) <span class="hint" id="bpNote"></span></td><td id="bp7"></td></tr>
+          <tr><td>Fitment Factor applied</td><td id="ffUsed"></td></tr>
+          <tr class="tot"><td>Basic Pay after 8th CPC</td><td id="bp8"></td></tr>
+
+          <tr class="sec"><td colspan="2">Earnings (monthly)</td></tr>
+          <tr><td>Basic Pay after 8th CPC</td><td id="bp8b"></td></tr>
+          <tr><td>House Rent Allowance <span id="hraPct"></span></td><td id="hra"></td></tr>
+          <tr><td>Transport Allowance <span class="hint" id="taNote"></span></td><td id="ta"></td></tr>
+          <tr class="tot"><td>Gross Pay</td><td id="gross"></td></tr>
+
+          <tr class="sec"><td colspan="2">Deductions (monthly)</td></tr>
+          <tr class="ded"><td>NPS — 10% of Basic Pay after 8th CPC</td><td id="nps"></td></tr>
+          <tr class="ded"><td>CGHS contribution</td><td id="cghs"></td></tr>
+          <tr class="ded"><td>Income Tax (new regime, incl. 4% cess)</td><td id="tax"></td></tr>
+          <tr class="tot"><td>Total Deductions</td><td id="ded"></td></tr>
+        </table>
+
+        <div class="net">
+          <span class="lbl">Net Take Home Salary (monthly)</span>
+          <span class="amt" id="net"></span>
+          <span class="yr" id="netYr"></span>
+        </div>
+
+        <table style="margin-top:18px">
+          <tr class="sec"><td colspan="2">Income Tax Working (annual)</td></tr>
+          <tr><td>Gross Salary (Gross Pay × 12)</td><td id="annGross"></td></tr>
+          <tr><td>Less: Standard Deduction</td><td id="stdDed"></td></tr>
+          <tr><td>Taxable Income</td><td id="taxable"></td></tr>
+          <tr><td>Tax on slabs</td><td id="slabTax"></td></tr>
+          <tr><td>Rebate u/s 87A / marginal relief</td><td id="rebate"></td></tr>
+          <tr><td>Health &amp; Education Cess @ 4%</td><td id="cess"></td></tr>
+          <tr class="tot"><td>Annual Tax Liability</td><td id="annTax"></td></tr>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <details>
+    <summary>Assumptions &amp; Notes</summary>
+    <div class="body">
+      <ul>
+        <li><b>Basic Pay as on 01.07.2028</b> = current Basic Pay moved down two cells (two annual increments) in the same 7th CPC pay level, per the Pay Matrix. If fewer than two cells remain, pay stagnates at the last cell of the level (noted on the slip).</li>
+        <li><b>Basic Pay after 8th CPC</b> = (Basic Pay as on 01.07.2028) × Fitment Factor, rounded to the nearest rupee.</li>
+        <li><b>DA = 0</b> after the 8th CPC, so Gross Pay = Basic Pay after 8th CPC + HRA + TA.</li>
+        <li><b>HRA</b> at 24% / 16% / 8% (X / Y / Z) of Basic Pay after 8th CPC.</li>
+        <li><b>Transport Allowance</b> = 7th CPC base rate × Fitment Factor (the "+DA" component is nil): Level 9 and above: ₹7,200 (X) / ₹3,600 (Y, Z); Levels 3–8: ₹3,600 / ₹1,800; Levels 1–2: ₹3,600 / ₹1,800 where pay ≥ ₹24,200, else ₹1,350 / ₹900. The ₹24,200 threshold is tested against the 7th CPC Basic Pay as on 01.07.2028, since the rate table is a 7th CPC table. The special ₹15,750 rate (Level 14+, staff car admissible but not availed) and double TA for PwD employees are not modelled.</li>
+        <li><b>Income tax</b> on salary (Gross Pay × 12) under the new tax regime slabs currently in force (FY 2025-26): ₹0–4L nil; 4–8L @5%; 8–12L @10%; 12–16L @15%; 16–20L @20%; 20–24L @25%; above 24L @30%. Standard deduction of ₹75,000 is allowed; full rebate u/s 87A where taxable income ≤ ₹12,00,000, with marginal relief just above it; Health &amp; Education Cess @4%. Slabs for FY 2028-29 are not yet notified — update here if they change.</li>
+        <li><b>CGHS</b>: ₹250 (Levels 1–5), ₹450 (Level 6), ₹650 (Levels 7–11), ₹1,000 (Level 12 and above, including 13, 13A, 14–16).</li>
+        <li>Employee's own NPS contribution (80CCD(1)) is <b>not deductible</b> under the new regime, so it does not reduce taxable income. CGHS is also not deducted from taxable income under the new regime.</li>
+        <li>Pay Matrix cells for Levels 1–13A are as per the Gazette table supplied; Levels 14–16 are generated by the standard matrix rule (3% increment, rounded to nearest ₹100) — verify the top cells of Levels 14–16 against the Gazette before relying on them.</li>
+        <li>Other deductions (CGEGIS, licence fee, professional tax, recoveries) are not modelled.</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<script>
+/* ---------- Pay Matrix (7th CPC) ----------
+   next cell = round(prev × 1.03 to nearest ₹100). Cell counts per Gazette (L1–13A) / standard matrix (L14–16). */
+const LEVELS = [
+  {id:"1",  start:18000,  cells:40},
+  {id:"2",  start:19900,  cells:40},
+  {id:"3",  start:21700,  cells:40},
+  {id:"4",  start:25500,  cells:40},
+  {id:"5",  start:29200,  cells:40},
+  {id:"6",  start:35400,  cells:40},
+  {id:"7",  start:44900,  cells:40},
+  {id:"8",  start:47600,  cells:40},
+  {id:"9",  start:53100,  cells:40},
+  {id:"10", start:56100,  cells:40},
+  {id:"11", start:67700,  cells:39},
+  {id:"12", start:78800,  cells:34},
+  {id:"13", start:123100, cells:20},
+  {id:"13A",start:131100, cells:18},
+  {id:"14", start:144200, cells:15},
+  {id:"15", start:182200, cells:8},
+  {id:"16", start:205400, cells:4},
+];
+
+function buildCells(start, n){
+  const out=[start];
+  for(let i=1;i<n;i++) out.push(Math.round(out[i-1]*1.03/100)*100);
+  return out;
+}
+const MATRIX = {};
+LEVELS.forEach(l => MATRIX[l.id] = buildCells(l.start, l.cells));
+
+/* ---------- Transport Allowance: 7th CPC base rate, to be multiplied by FF ---------- */
+function taBase(levelId, bp7, city){
+  const lvlNum = levelId==="13A" ? 13.5 : parseFloat(levelId);
+  const high = (city==="X");
+  if(lvlNum>=9) return high?7200:3600;
+  if(lvlNum>=3) return high?3600:1800;
+  if(bp7>=24200) return high?3600:1800;
+  return high?1350:900;
+}
+
+/* ---------- Income tax, new regime ---------- */
+const SLABS=[
+  [400000,0],[800000,.05],[1200000,.10],[1600000,.15],
+  [2000000,.20],[2400000,.25],[Infinity,.30]
+];
+const STD_DED=75000, REBATE_LIMIT=1200000;
+
+function slabTax(ti){
+  let tax=0, prev=0;
+  for(const [cap,rate] of SLABS){
+    if(ti>prev) tax += (Math.min(ti,cap)-prev)*rate;
+    prev=cap;
+    if(ti<=cap) break;
+  }
+  return tax;
+}
+function incomeTax(annualGross){
+  const taxable=Math.max(0, annualGross-STD_DED);
+  const base=slabTax(taxable);
+  let afterRebate;
+  if(taxable<=REBATE_LIMIT) afterRebate=0;                 /* 87A full rebate */
+  else afterRebate=Math.min(base, taxable-REBATE_LIMIT);   /* marginal relief */
+  const rebate=base-afterRebate;
+  const cess=Math.round(afterRebate*0.04);
+  return {taxable, base:Math.round(base), rebate:Math.round(rebate),
+          cess, total:Math.round(afterRebate)+cess};
+}
+
+/* ---------- CGHS by level ---------- */
+function cghsFor(levelId){
+  const lvlNum = levelId==="13A" ? 13.5 : parseFloat(levelId);
+  if(lvlNum<=5) return 250;
+  if(lvlNum===6) return 450;
+  if(lvlNum<=11) return 650;
+  return 1000;
+}
+
+/* ---------- UI ---------- */
+const $=id=>document.getElementById(id);
+const fmt=n=>"₹ "+n.toLocaleString("en-IN");
+
+const levelSel=$("level"), basicSel=$("basic"), ffInput=$("ff");
+LEVELS.forEach(l=>{
+  const o=document.createElement("option");
+  o.value=l.id; o.textContent="Level "+l.id;
+  levelSel.appendChild(o);
+});
+function fillBasics(){
+  const cells=MATRIX[levelSel.value];
+  basicSel.innerHTML="";
+  cells.forEach((v,i)=>{
+    const o=document.createElement("option");
+    o.value=v; o.textContent=(i+1)+".  ₹ "+v.toLocaleString("en-IN");
+    basicSel.appendChild(o);
+  });
+}
+levelSel.addEventListener("change",fillBasics);
+fillBasics();
+
+$("calc").addEventListener("click",()=>{
+  /* validate fitment factor */
+  const ff=Math.round(parseFloat(ffInput.value)*100)/100;   /* limit to 2 decimals */
+  const bad=!isFinite(ff)||ff<1.83||ff>3.83;
+  $("ffErr").style.display=bad?"block":"none";
+  if(bad){ffInput.focus();return;}
+  ffInput.value=ff.toFixed(2);
+
+  const lvl=levelSel.value, city=$("city").value;
+  const cells=MATRIX[lvl];
+  const idx=basicSel.selectedIndex;
+  const newIdx=Math.min(idx+2, cells.length-1);
+  const bp7=cells[newIdx];                 /* Basic Pay as on 01.07.2028 (7th CPC) */
+  const stagnated=(newIdx-idx)<2;
+
+  const bp8=Math.round(bp7*ff);            /* Basic Pay after 8th CPC */
+
+  const hraPct=city==="X"?0.24:city==="Y"?0.16:0.08;
+  const hra=Math.round(bp8*hraPct);
+  const base=taBase(lvl,bp7,city);
+  const ta=Math.round(base*ff);            /* TA = base rate × FF, DA = 0 */
+  const gross=bp8+hra+ta;
+  const nps=Math.round(bp8*0.10);
+  const cghs=cghsFor(lvl);
+
+  const annGross=gross*12;
+  const t=incomeTax(annGross);
+  const taxMonthly=Math.round(t.total/12);
+
+  const ded=nps+cghs+taxMonthly;
+  const net=gross-ded;
+
+  $("bp7").textContent=fmt(bp7);
+  $("bpNote").textContent=stagnated?" (stagnated at top of level)":"";
+  $("ffUsed").textContent="× "+ff.toFixed(2);
+  $("bp8").textContent=fmt(bp8);
+  $("bp8b").textContent=fmt(bp8);
+  $("hraPct").innerHTML='<span class="hint">('+(hraPct*100)+'% — '+city+' city)</span>';
+  $("hra").textContent=fmt(hra);
+  $("taNote").textContent="(₹"+base.toLocaleString("en-IN")+" × "+ff.toFixed(2)+")";
+  $("ta").textContent=fmt(ta);
+  $("gross").textContent=fmt(gross);
+  $("nps").textContent="− "+fmt(nps);
+  $("cghs").textContent="− "+fmt(cghs);
+  $("tax").textContent="− "+fmt(taxMonthly);
+  $("ded").textContent=fmt(ded);
+  $("net").textContent=fmt(net);
+  $("netYr").textContent="≈ "+fmt(net*12)+" per annum";
+
+  $("annGross").textContent=fmt(annGross);
+  $("stdDed").textContent="− "+fmt(Math.min(STD_DED,annGross));
+  $("taxable").textContent=fmt(t.taxable);
+  $("slabTax").textContent=fmt(t.base);
+  $("rebate").textContent="− "+fmt(t.rebate);
+  $("cess").textContent=fmt(t.cess);
+  $("annTax").textContent=fmt(t.total);
+
+  $("placeholder").style.display="none";
+  $("slip").classList.add("show");
+});
+</script>
+</body>
+</html>
